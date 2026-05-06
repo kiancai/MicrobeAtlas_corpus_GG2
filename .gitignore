@@ -1,6 +1,14 @@
 # Raw data - all large data files excluded
 rawdata/
 
+# Output & logs
+logs/
+results/
+
+# Referenced code (not our own)
+scripts/jxt_scripts/
+scripts/micoformer/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -10,6 +18,8 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+# .ipynb 由 jupytext 从同名 .py 自动生成，不入 git
+*.ipynb
 
 # OS
 .DS_Store
