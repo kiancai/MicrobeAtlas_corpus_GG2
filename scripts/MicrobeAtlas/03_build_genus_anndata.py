@@ -108,6 +108,11 @@ def make_var_id(row):
     return ';'.join(parts)
 
 tax = pd.read_csv(TAX_TSV, sep='\t', index_col=0)
+# 防御: QIIME2 某些版本 export 的 taxonomy.tsv 第二行是 #q2:types 元数据，跳过之
+if str(tax.index[0]).startswith('#'):
+    tax = tax.iloc[1:]
+    print("  跳过了 #q2:types 元数据行")
+tax['Confidence'] = pd.to_numeric(tax['Confidence'], errors='coerce')
 print(f"原始 OTU 数: {len(tax):,}")
 print(f"taxonomy.tsv 列: {list(tax.columns)}")
 

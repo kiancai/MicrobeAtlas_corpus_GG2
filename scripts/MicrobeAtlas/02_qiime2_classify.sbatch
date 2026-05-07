@@ -39,6 +39,7 @@ qiime feature-classifier classify-sklearn \
   --i-reads "$PROJECT_DIR/results/rep_seqs/otus97_rep.qza" \
   --o-classification "$PROJECT_DIR/results/taxonomy/taxonomy.qza" \
   --p-n-jobs "$SLURM_CPUS_PER_TASK" \
+  --p-read-orientation both \
   --verbose
 
 echo "=== Step 3: 导出 TSV ==="

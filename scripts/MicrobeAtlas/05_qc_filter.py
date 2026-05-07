@@ -40,7 +40,7 @@ PROJECT_DIR = Path("/hpcdisk1/limk_group/caiqy/project/260428_greengene2")
 OUT_DIR     = PROJECT_DIR / "results/feature_table"
 
 MIN_READS    = 1000
-MIN_FEATURES = 10
+MIN_FEATURES = 5
 
 INPUTS = [
     ("full",      OUT_DIR / "gg2.full.nonzero.h5ad",      OUT_DIR / "gg2.full.qc.h5ad"),

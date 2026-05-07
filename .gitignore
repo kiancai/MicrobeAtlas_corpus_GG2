@@ -21,5 +21,8 @@ env/
 # .ipynb 由 jupytext 从同名 .py 自动生成，不入 git
 *.ipynb
 
+# 一次性诊断测试目录整体排除
+**/test_orient/
+
 # OS
 .DS_Store
