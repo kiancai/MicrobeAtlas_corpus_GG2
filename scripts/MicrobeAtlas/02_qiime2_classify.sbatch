@@ -8,7 +8,7 @@
 #SBATCH --mem 128G
 #SBATCH --output=/hpcdisk1/limk_group/caiqy/project/260428_greengene2/logs/gg2_classify_%j.log
 #SBATCH --error=/hpcdisk1/limk_group/caiqy/project/260428_greengene2/logs/gg2_classify_%j.log
-# 提交方式: sbatch scripts/02_qiime2_classify.sbatch
+# 提交方式: sbatch scripts/MicrobeAtlas/02_qiime2_classify.sbatch
 
 set -euo pipefail
 

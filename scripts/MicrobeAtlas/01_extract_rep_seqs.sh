@@ -3,7 +3,7 @@
 # 序列 ID 使用 97_XXXXX 格式，与 BIOM 矩阵 OTU ID 对齐
 set -euo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 ALLINFO="$PROJECT_DIR/rawdata/MicrobeAtlas/OTU_count/otus.97.allinfo"
 OUT="$PROJECT_DIR/results/rep_seqs/otus97_rep.fasta"
 
