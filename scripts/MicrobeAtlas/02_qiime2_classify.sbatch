@@ -34,12 +34,16 @@ qiime tools import \
   --output-path "$PROJECT_DIR/results/rep_seqs/otus97_rep.qza"
 
 echo "=== Step 2: 分类注释（使用 $SLURM_CPUS_PER_TASK 核）==="
+# 注意：此处 *不* 用 --p-read-orientation both
+# MicrobeAtlas 代表序列是策展库，方向已统一（实测 91.33% 正向占优，仅 0.01% 反向）。
+# both 模式会让 RC 方向给出"高数值低意义" Confidence 覆盖正向浅注释，导致
+# ~4,166 个 OTU 退化（reads-to-genus 覆盖率从 88.30% 跌到 86.35%）。详见 CLAUDE.md。
+# ResMicroDb 是混合方向 ASV，那边才需要 both。
 qiime feature-classifier classify-sklearn \
   --i-classifier "$CLASSIFIER" \
   --i-reads "$PROJECT_DIR/results/rep_seqs/otus97_rep.qza" \
   --o-classification "$PROJECT_DIR/results/taxonomy/taxonomy.qza" \
   --p-n-jobs "$SLURM_CPUS_PER_TASK" \
-  --p-read-orientation both \
   --verbose
 
 echo "=== Step 3: 导出 TSV ==="
