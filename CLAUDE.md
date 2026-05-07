@@ -27,7 +27,18 @@ rawdata/
 │       ├── samples-otus.97.mapped.biom.gz          # 未过滤丰度矩阵 (3.6 GB)
 │       └── samples-otus.97.mapped.metag.minfilter.refilt.biom.gz  # 过滤后丰度矩阵 (3.1 GB)
 └── ResMicroDb/
-    └── raw_reads/PRJEB13657/              # 原始双端测序 reads (.fastq.gz)
+    ├── 16S/<PROJECT>/                     # 398 个项目，~10 万样本，~164 万 ASV
+    │   ├── results/                       # jxt 流水线产物 + 本项目 GG2 注释
+    │   │   ├── asv.fa                     # 项目内 ASV (ID 从 ASV_1 起，跨项目重名)
+    │   │   ├── otutab.txt                 # ASV × sample dense TSV
+    │   │   ├── rep-seqs.qza, table.qza    # 上述两者的 QZA 形式
+    │   │   ├── taxonomy.qza               # SILVA NB 分类 QZA（jxt）
+    │   │   ├── taxonomy_silva.txt         # SILVA 注释 8 列 (OTUID + K..S)
+    │   │   ├── taxonomy_gg2.qza           # GG2 NB 分类 QZA（本项目新增）
+    │   │   └── taxonomy_gg2.txt           # GG2 注释 3 列 (Feature ID / Taxon / Confidence)
+    │   ├── log/                           # jxt 原日志
+    │   └── log_gg2/                       # GG2 分类日志（本项目新增）
+    └── raw_reads/PRJEB13657/              # 原始双端 fastq（仅 1 个项目齐全，其它项目 fastq 不在本机）
 ```
 
 ## 各文件详细说明
@@ -227,3 +238,98 @@ per-sample 丢失中位数 76% 也是同一原因——MicrobeAtlas 数据本身
 1. 把 `taxonomy.tsv` 按 mito/chloro/非 B/A 分组，用 OTU id 在 BIOM 中查 `observation/matrix` 各行 reads 总和
 2. `BIOM_OTU - tax_OTU` 差集第一个就是 `Unmapped`
 3. AnnData 行 nnz 用 `np.diff(X.indptr)`，行和用 `cumsum(data)[indptr]` 求差（避免对每行循环）
+
+---
+
+## ResMicroDb 数据集（2026-05-07 起整理）
+
+### 数据规模
+- **398 个 study，100,789 样本**，跨项目 ~164 万 ASV（项目内 ID `ASV_N`，
+  跨项目 namespace 化为 `<PROJECT>__ASV_N` 后唯一）
+- 项目内 ASV 数中位 1,955，最大 173,864（SRP056779），最小 22（SRP397402）
+- 总 reads 约 66 亿
+
+### jxt 流水线（ASV 与 SILVA 注释的来源）
+
+完整代码在 `scripts/jxt_scripts/`，摘要 7 步：
+
+1. 双端 merge（`vsearch fastq_mergepairs`）
+2. 切引物 + 质控（`vsearch fastx_filter --fastq_stripleft/right 23 --fastq_maxee_rate 0.01`）
+3. **方向矫正**（`vsearch --orient -db silva_16s_v123.udb`）— **关键步骤，问题源头**：
+   matched 序列翻为正向，**notmatched 序列保留原方向**
+4. 去冗余（`vsearch derep --minuniquesize 10`）
+5. 去噪（`usearch unoise3`）→ `asv.fa`
+6. 生成特征表（`vsearch usearch_global --id 0.97`）→ `otutab.txt`
+7. SILVA 分类（QIIME2 2024.2 `classify-sklearn` + `silva-138-99-nb-classifier.qza`）→ `taxonomy_silva.txt`
+
+**重要认知**：`otutab.txt` 是 vsearch_global @0.97 的 reads 归属，**不是精确 ASV 计数**。
+对 genus 级聚合分析无影响，但若做 ASV 级精细分析需注意语义。
+
+### GG2 注释的方向问题（本次发现）
+
+**问题**：jxt 第 3 步用 SILVA v123 做 orient。某些项目（典型如 SRP515474）的引物 / 区段
+v123 完全不识别 → 全部走 notmatched 分支 → ASV 集合方向混合。
+GG2 NB classifier 默认 `--p-read-orientation auto` 只对前 100 条 ASV 选一向锁定全 batch，
+混合方向项目里另一半 ASV 报 Unassigned。
+
+**实测对照**（SRP515474, 73,749 ASV, 5.5 亿 reads）：
+
+| 模式 | reads 到 genus | reads Unassigned | 平均 Confidence |
+|---|---:|---:|---:|
+| `auto` | 7.10% | 87.00% | 0.78 |
+| `reverse-complement` | 7.10% (= auto) | 87.00% | 0.78 |
+| **`both`** | **84.41%** | **1.09%** | **0.94** |
+
+**解决方案**：分类 sbatch 加 `--p-read-orientation both`：每条 ASV 独立尝试正反两方向，
+取置信度高的一次。计算时间约翻倍；对原本方向已齐的项目无影响。
+
+**版本要求**：QIIME2 ≥ 2025.7（commit `be2c2df` 引入 `both`）。本项目用 `qiime2-2026.1` ✓。
+jxt 当年用 2024.2 没这选项，所以 SRP515474 类项目 GG2 注释失败但 SILVA 正常——
+推测 SILVA NB 训练时做了双向数据增强，对方向不敏感。
+
+**MicrobeAtlas 不受影响**：代表序列是策展库，方向已统一。auto 模式 Unassigned 仅 0.07%。
+本项目重跑 02 时仍统一加 `both` 以保证两数据集参数一致。
+
+### 跨项目合并的不变量
+
+- 样本 ID（ERR / SRR / DRR）跨项目唯一（已在 02 校验）
+- ASV ID 跨项目重名 → namespace 为 `<PROJECT>__ASV_N`
+- 不同项目的 V 区段不同（V1-V3 / V3-V4 / V4 / V1-V9 都有），跨项目 ASV 序列不可直接比较；
+  在 GG2 6 级 genus 路径聚合后大致可比
+
+### 流水线脚本
+
+```
+scripts/MicrobeAtlas/        # OTU → genus 聚合（输入是策展的全长代表序列）
+  01_extract_rep_seqs.sh           从 otus.97.allinfo 提取 97% 代表序列
+  02_qiime2_classify.sbatch        GG2 NB 分类（已加 --p-read-orientation both）
+  03_build_genus_anndata.py        过滤 mito/chloro/非 BA + 6 级路径聚合
+  04_drop_empty_samples.py         剔除零 taxon 样本
+  05_qc_filter.py                  删 shallow var + 迭代 QC（MIN_READS=1000, MIN_FEATURES=5）
+  05_v2_qc_filter_keep_shallow.py  保留 shallow var 的版本
+
+scripts/ResMicroDb/          # 398 项目 ASV → 跨项目 sample × genus
+  01_qiime2_classify.sbatch        单项目 GG2 NB 分类（已加 --p-read-orientation both）
+  01_run_loop.sh                   轮询提交器（CAP=90, INTERVAL=30s, 断点续投）
+  02_merge_to_asv_anndata.py       398 项目 → sample × ASV CSR（GG2 + SILVA 双注释）
+  03_build_genus_anndata.py        过滤 mito/chloro/非 BA + 6 级路径聚合
+  04_drop_empty_samples.py         剔除零 taxon 样本（含项目维度报告）
+  05_qc_filter.py                  同 MicrobeAtlas（MIN_FEATURES=5）
+```
+
+### 集群提交注意事项（本 HPC 限制）
+
+- **QOS 限制**：单用户排队作业上限约 100。array job 提 398 会被 `QOSMaxSubmitJobPerUserLimit` 拒绝；
+  必须分批，本项目用 `01_run_loop.sh` 维持 90 并发
+- **本地 sbatch wrapper 强制要求命令行带资源 flag**（即使 `#SBATCH` 已写）：
+  ```bash
+  sbatch -c 8 --mem=128G -t 04:00:00 script.sbatch     # ✓
+  sbatch script.sbatch                                  # ✗ 报"必须包含申请核数、内存、任务运行时间"
+  ```
+  从 nohup / 非交互 shell 提交时尤其严格。`01_run_loop.sh` 已在脚本内部用
+  `SBATCH_RES=( -c 8 --mem=128G -t 04:00:00 )` 兜底。
+
+### 备份位置
+
+- `results/_backup_pre_orient_fix/` — 2026-05-07 启用 `both` 前的 MicrobeAtlas 产物
+  （taxonomy/ + 8 个 gg2.*.h5ad + qc_plots/）。重跑后核对无误可删。
