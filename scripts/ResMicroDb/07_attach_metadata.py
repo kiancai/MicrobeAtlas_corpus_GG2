@@ -16,7 +16,7 @@
 # %% [markdown]
 # # ResMicroDb 07: attach metadata 到 anndata.obs
 #
-# 把 06 步产出的 `metadata_all.standardized.parquet` (135,746 × 36) 按 `Run` 左 join 进
+# 把 06b 修正后的 `metadata_all.standardized.fixed.parquet` (135,746 × 36) 按 `Run` 左 join 进
 # `resmicrodb.gg2.genus.qc.h5ad` (93,425 × 4,952, obs=0 列)，得到
 # `resmicrodb.gg2.genus.qc.with_meta.h5ad`。
 #
@@ -37,7 +37,7 @@ ad.settings.allow_write_nullable_strings = True
 
 ROOT = Path("/hpcdisk1/limk_group/caiqy/project/260428_greengene2")
 IN_H5AD = ROOT / "results/feature_table/resmicrodb.gg2.genus.qc.h5ad"
-IN_META = ROOT / "results/feature_table/metadata_all.standardized.parquet"
+IN_META = ROOT / "results/feature_table/metadata_all.standardized.fixed.parquet"
 OUT_H5AD = ROOT / "results/feature_table/resmicrodb.gg2.genus.qc.with_meta.h5ad"
 
 # %% [markdown]
