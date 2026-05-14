@@ -102,3 +102,7 @@ print(f"回读: {b.shape}  obs cols: {len(b.obs.columns)}")
 assert b.shape == adata.shape
 assert list(b.obs.columns) == list(obs_new.columns)
 print("OK")
+
+# %%
+
+# %%

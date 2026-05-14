@@ -56,6 +56,7 @@ COMMON_COLS = [
     "Database", "Run", "BioSample", "Project_ID", "Sequencing_Type",
     "Sex", "Smoking", "Latitude", "Longitude",
 ]
+RANK_COLS = ["Domain", "Phylum", "Class", "Order", "Family", "Genus"]
 
 # %% [markdown]
 # ## §1 读入两库
@@ -139,6 +140,15 @@ print(f"\nobs cols 完整列表:")
 for c in merged.obs.columns:
     print(f"  {c}")
 
+# `ad.concat(..., join='outer')` 正确保留 var_names 并集，但 var annotation
+# DataFrame 在 outer 合并后可能被 merge 策略丢空；这里从 6 级路径重建。
+var_parts = merged.var_names.to_series().str.split(";", expand=True)
+assert var_parts.shape[1] == len(RANK_COLS), "var_names 不是预期的 6 级 taxonomy 路径"
+var_parts.columns = RANK_COLS
+var_parts.index = merged.var_names
+merged.var = var_parts.astype(str)
+print(f"\n重建 merged.var taxonomy 列: {list(merged.var.columns)}")
+
 # %% [markdown]
 # ## §7 合并后 sanity
 
@@ -170,6 +180,8 @@ print(f"  RM var → merged: {len(rm_vars_in_merged):,} (RM 原 {rm.n_vars:,})")
 print(f"  仅 MA: {len(ma_vars_in_merged - rm_vars_in_merged):,}")
 print(f"  仅 RM: {len(rm_vars_in_merged - ma_vars_in_merged):,}")
 print(f"  两者皆有: {len(ma_vars_in_merged & rm_vars_in_merged):,}")
+assert set(merged.var_names) == (set(ma.var_names) | set(rm.var_names)), "merged var 不是 MA/RM 并集"
+assert list(merged.var.columns) == RANK_COLS, "merged.var taxonomy 列缺失"
 
 # X 类型
 print(f"\nX dtype: {merged.X.dtype}  format: {type(merged.X).__name__}")
@@ -201,4 +213,5 @@ b = ad.read_h5ad(OUT, backed="r")
 print(f"回读: {b.shape}  obs cols: {len(b.obs.columns)}  var cols: {len(b.var.columns)}")
 assert b.shape == merged.shape
 assert list(b.obs.columns) == list(merged.obs.columns)
+assert list(b.var.columns) == list(merged.var.columns)
 print("OK")
