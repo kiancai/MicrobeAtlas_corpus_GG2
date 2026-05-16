@@ -24,5 +24,8 @@ env/
 # 一次性诊断测试目录整体排除
 **/test_orient/
 
+# Claude runtime locks
+.claude/scheduled_tasks.lock
+
 # OS
 .DS_Store
