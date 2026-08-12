@@ -49,7 +49,7 @@ jxt 当年用 2024.2 没这选项，所以 SRP515474 类项目 GG2 注释失败�
 - **MicrobeAtlas**：用 **`auto`**（默认），不要加 `--p-read-orientation`
 - **ResMicroDb**：用 **`both`**，必要
 
-两数据集分别用各自最优参数。`scripts/MicrobeAtlas/02_qiime2_classify.sbatch` 顶部已注释
+两数据集分别用各自最优参数。`scripts/databases/MicrobeAtlas/02_qiime2_classify.sbatch` 顶部已注释
 说明这条决策。
 
 ## 跨项目合并的不变量（ResMicroDb）

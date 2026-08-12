@@ -46,3 +46,19 @@ per-sample 丢失中位数 76% 也是同一原因——MicrobeAtlas 数据本身
 1. 把 `taxonomy.tsv` 按 mito/chloro/非 B/A 分组，用 OTU id 在 BIOM 中查 `observation/matrix` 各行 reads 总和
 2. `BIOM_OTU - tax_OTU` 差集第一个就是 `Unmapped`
 3. AnnData 行 nnz 用 `np.diff(X.indptr)`，行和用 `cumsum(data)[indptr]` 求差（避免对每行循环）
+
+---
+
+## MA 数据快照时间 = 2021-01 初（2026-06-04 验证）
+
+本地 MA 是**一次性快照爬取**，截止约 2021 年 1 月初——决定了"净新增样本只能来自 2021-01 之后首次公开的资源"（语料扩增的核心前提，见 `explorations/2026-06-04_dataset_expansion.md`）。
+
+**方法**：对 MA 全量 run（2,690,735）取各前缀最大编号，向 ENA Portal API 查 `first_public`。
+
+- 前缀计数：SRR 1,852,203 / ERR 766,634 / DRR 71,898。
+- **最大 SRR = `SRR13347130`，`first_public = 2021-01-04`**；185 万 SRR **无一 > SRR15M**（硬天花板，分布到 13.35M 戛然而止）。
+- 最大 ERR ≈ `ERR5013241`；`ERR5000000` first_public = 2021-01-05。
+- **坑**：run 编号→日期非严格单调（`SRR13000000` first_public 反而 2023-06-05，embargo 个例）；但结论靠"MA 含的最大编号 + 硬天花板"，不受影响——若爬于 2023 必含大量 SRR15M–23M 的 run，而它一个都没有。
+- **澄清**：上游 "MicrobeAtlas 2026 (Cell)" 更新版（2.39M 样本）未下载；本地是 2.69M 早期快照。
+- 覆盖率佐证（各库 run ∩ MA，随发布年单调下降）：mBodyMap(2021) 96% → PRIME(2025) 49% → GMrepo v3(2026) 27%。
+- **净新增审计基线** = 最终 corpus `obs['Run']` **1,793,428** unique run（= 1,826,126 行 − 32,698 跨库 Run 重复对；可从 `MCFCorpusV2.gg2.h5ad` 的 `obs['Run']` 提取）。

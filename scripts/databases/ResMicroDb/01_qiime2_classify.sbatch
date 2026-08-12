@@ -8,8 +8,8 @@
 #SBATCH -t 04:00:00
 #SBATCH --output=/hpcdisk1/limk_group/caiqy/project/260428_greengene2/logs/resmicrodb_gg2_%j.log
 #SBATCH --error=/hpcdisk1/limk_group/caiqy/project/260428_greengene2/logs/resmicrodb_gg2_%j.log
-# 提交方式: bash scripts/ResMicroDb/01_run_loop.sh
-# 单独提交: sbatch scripts/ResMicroDb/01_qiime2_classify.sbatch <PROJECT>
+# 提交方式: bash scripts/databases/ResMicroDb/01_run_loop.sh
+# 单独提交: sbatch scripts/databases/ResMicroDb/01_qiime2_classify.sbatch <PROJECT>
 
 set -euo pipefail
 

@@ -1,6 +1,6 @@
 # obs metadata schema（MicrobeAtlas / 06 步）
 
-脚本：`scripts/MicrobeAtlas/06_attach_metadata.py`
+脚本：`scripts/databases/MicrobeAtlas/06_attach_metadata.py`
 输入：`results/feature_table/gg2.full.qc.h5ad` (1,762,635 × 6,306, obs 空)
 输出：`results/feature_table/gg2.full.qc.with_meta.h5ad`（871 MB）
 
@@ -31,7 +31,7 @@
 | 18 | `MA_Health` | string | col3 健康类 token 用 `;` 拼回（不解冲突） | col3 无健康类 token |
 | 19 | `Sex` | category(female/male) | col3 token | col3 无 |
 | 20 | `MA_AgeGroup` | category(infant/baby/toddler/adult/elderly) | col3 token | col3 无 |
-| 21 | `Smoking` | category(Smoker/Non-smoker) | col3 含 `smoker` → Smoker | col3 无 (ResMicroDb 阶段会用 Non-smoker 填充) |
+| 21 | `Smoking` | category(Smoker/Non-smoker) | col3 含 `smoker` → Smoker | col3 无 → **NA（未做任何填充；Non-smoker 仅为空 category 占位，实测 count=0）** |
 | 22 | `MA_Keywords` | string | col5 原值 | 原 col5 空 |
 | 23 | `MA_Geo_Raw` | string | col9 原值 | 原 col9 空 |
 | 24 | `Latitude` | float64 | col9 split 后 float[0] | 解析失败 NaN |
@@ -92,9 +92,10 @@ animal                     → animal=True, MA_Env_Animal_Sub = ""
 - `infection` 在 col3 里就是 `disease` 的细化，没必要再起专列
 - 这些标签只有几千~几万样本带，相对总样本占比低，再切分意义不大；保留单 string 列由下游按需 query
 
-### 为什么 Smoking 留 Non-smoker 占位
+### 关于 Smoking 的 Non-smoker category（重要：未做任何填充）
 - MicrobeAtlas col3 里只有 `smoker` token，无显式"non-smoker"
-- ResMicroDb 阶段（02 步整合该库 metadata 时）会有 Non-smoker 标签，因此 `Smoking` 的 categories 提前包含 `["Smoker", "Non-smoker"]`，方便后续两库 concat 时 dtype 对齐
+- `Smoking` 的 categories 列表含 `["Smoker", "Non-smoker"]`**仅为占位**（为与 RM concat 时 dtype 对齐），**但实测无一样本被标成 Non-smoker（count=0）**；col3 无 smoker token 的样本一律是 `NA`，**绝不把空值填成 Non-smoker**。
+- 合并阶段：MA 的空值 → `Unknown`（不是 Non-smoker）。这是数据诚实性红线。
 
 ---
 

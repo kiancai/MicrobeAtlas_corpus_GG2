@@ -21,6 +21,6 @@ echo "=== 11_finalize_corpus  $(date) ==="
 echo "node : $(hostname)"
 echo "cpus : $SLURM_CPUS_PER_TASK"
 
-"$PYBIO" scripts/Merge/11_finalize_corpus.py
+"$PYBIO" scripts/archive/Merge/11_finalize_corpus.py
 
 echo "=== done  $(date) ==="

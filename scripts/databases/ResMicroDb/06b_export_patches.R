@@ -10,7 +10,7 @@
 # 改动规则与 jxt 漏改的处理详见：
 # rawdata/ResMicroDb/supplement data/CHANGES_0105_new7.md
 #
-# 运行：conda activate baseR && Rscript scripts/ResMicroDb/06b_export_patches.R
+# 运行：conda activate baseR && Rscript scripts/databases/ResMicroDb/06b_export_patches.R
 
 suppressPackageStartupMessages({ library(phyloseq) })
 
