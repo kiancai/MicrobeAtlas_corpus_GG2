@@ -27,8 +27,8 @@
 #
 # **过滤标准（参考 easyAmp.r / Yong-Xin Liu 16S 流程）**
 # 1. Domain ∈ {Bacteria, Archaea} —— 丢 Unassigned 与 Eukaryota
-# 2. 丢 mitochondria（taxonomy 字符串含 'mitochondri'，不区分大小写）
-# 3. 丢 chloroplast（taxonomy 字符串含 'chloroplast'，不区分大小写）
+# 2. 丢 mitochondria（完整分类标签为 Mitochondria，不区分大小写）
+# 3. 丢 chloroplast（完整分类标签为 Chloroplast，不区分大小写）
 #
 # 之所以源头过滤 mito/chloro：GG2 沿 GTDB 把它们嵌在 `d__Bacteria` 下面，
 # 共 ~1,750 个 var_id，看上去跟普通细菌无异，下游做 phylum/class 级丰度统计
@@ -130,8 +130,8 @@ tax.head(3)
 print(f"过滤前 OTU 数: {len(tax):,}")
 
 mask_dom    = tax['Domain'].isin(['d__Bacteria', 'd__Archaea'])
-mask_mito   = ~tax['Taxon'].str.contains('mitochondri', case=False, na=False)
-mask_chloro = ~tax['Taxon'].str.contains('chloroplast',  case=False, na=False)
+mask_mito   = ~tax['Taxon'].str.contains(r'(?:^|;)\s*[dkpcofgs]__Mitochondria\s*(?=;|$)', case=False, na=False)
+mask_chloro = ~tax['Taxon'].str.contains(r'(?:^|;)\s*[dkpcofgs]__Chloroplast\s*(?=;|$)', case=False, na=False)
 
 print(f"  丢 Domain 非 B/A : {(~mask_dom).sum():,}")
 print(f"  丢 mitochondria  : {(~mask_mito).sum():,}")

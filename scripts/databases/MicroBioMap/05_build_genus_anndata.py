@@ -93,8 +93,8 @@ print(f"原始 ASV 数: {len(tax):,}")
 
 # %%
 mask_dom    = tax['Domain'].isin(['d__Bacteria', 'd__Archaea'])
-mask_mito   = ~tax['Taxon_full'].str.contains('mitochondri', case=False, na=False)
-mask_chloro = ~tax['Taxon_full'].str.contains('chloroplast',  case=False, na=False)
+mask_mito   = ~tax['Taxon_full'].str.contains(r'(?:^|;)\s*[dkpcofgs]__Mitochondria\s*(?=;|$)', case=False, na=False)
+mask_chloro = ~tax['Taxon_full'].str.contains(r'(?:^|;)\s*[dkpcofgs]__Chloroplast\s*(?=;|$)', case=False, na=False)
 
 print(f"过滤前 ASV 数: {len(tax):,}")
 print(f"  丢 Domain 非 B/A : {(~mask_dom).sum():,}")

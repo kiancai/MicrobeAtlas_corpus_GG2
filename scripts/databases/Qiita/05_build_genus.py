@@ -61,8 +61,8 @@ for i, study in enumerate(studies):
     parsed = pd.DataFrame([parse_gg2(t) for t in taxon], index=list(adata.var_names))
     parsed['Taxon_full'] = parsed[RANK_COLS].apply(lambda r: ';'.join('' if pd.isna(v) else v for v in r), axis=1)
     keep = (parsed['Domain'].isin(['d__Bacteria', 'd__Archaea'])
-            & ~parsed['Taxon_full'].str.contains('mitochondri', case=False, na=False)
-            & ~parsed['Taxon_full'].str.contains('chloroplast', case=False, na=False)).values
+            & ~parsed['Taxon_full'].str.contains(r'(?:^|;)\s*[dkpcofgs]__Mitochondria\s*(?=;|$)', case=False, na=False)
+            & ~parsed['Taxon_full'].str.contains(r'(?:^|;)\s*[dkpcofgs]__Chloroplast\s*(?=;|$)', case=False, na=False)).values
     tk = parsed[keep].copy()
     tk['var_id'] = tk.apply(make_var_id, axis=1)
     var_list = sorted(tk['var_id'].unique())
